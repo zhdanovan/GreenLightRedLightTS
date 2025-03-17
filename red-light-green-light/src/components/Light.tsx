@@ -1,19 +1,15 @@
 import {useState, useEffect} from 'react';
+import './styles.css';
 
 interface LightProps {
     isGreen:boolean;
+    isBlink:boolean;
 }
 
-const Light : React.FC<LightProps> = ({isGreen}) => {
+const Light : React.FC<LightProps> = ({isGreen, isBlink}) => {
     return (
         <div
-        style={{
-          width: '100px',
-          height: '100px',
-          borderRadius: '50%',
-          backgroundColor: isGreen ? 'green' : 'red',
-          margin: '20px auto',
-        }}
+        className={`light ${isGreen ? 'green' : 'red'} ${isBlink ? 'blink' : ''}`}
       />
     );
   };
