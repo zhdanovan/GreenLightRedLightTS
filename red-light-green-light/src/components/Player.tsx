@@ -3,9 +3,10 @@ import React, {useState, useEffect} from 'react';
 interface PlayerProps {
     isMove:boolean;
     isCaught:()=>void;
+    setPlayerPosition: (position: number) => void;
 }
 
-const Player: React.FC<PlayerProps> = ({ isMove, isCaught }) => {
+const Player: React.FC<PlayerProps> = ({ isMove, isCaught, setPlayerPosition }) => {
     const [position, setPosition] = useState(0);
   
     useEffect(() => {
@@ -21,6 +22,11 @@ const Player: React.FC<PlayerProps> = ({ isMove, isCaught }) => {
         window.removeEventListener('keydown', handleKeyDown);
       };
     }, [isMove]);
+
+    useEffect(() => {
+      setPlayerPosition(position); 
+    }, [position, setPlayerPosition]);
+  
 
     useEffect(() => {
       if (!isMove && position > 0) {

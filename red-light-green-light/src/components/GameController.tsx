@@ -7,6 +7,8 @@ const GameController: React.FC = () => {
   const [isGameOver, setIsGameOver] = useState(false);
   const [isBlink, setIsBlink] = useState(false);
   const [timeLeft,setTimeLeft] = useState(30);
+  const [playerPosition, setPlayerPosition] = useState(0);
+  const finishLine = 800; 
 
 
 
@@ -30,7 +32,14 @@ const GameController: React.FC = () => {
       }
     }, [timeLeft, isGameOver]);
 
-    
+    useEffect(() => {
+      if (playerPosition >= finishLine) {
+        setIsGameOver(true);
+        alert('Win!'); 
+      }
+    }, [playerPosition]);
+
+
     return () => clearInterval(lightInterval);
   }, []);
 
@@ -47,7 +56,7 @@ const GameController: React.FC = () => {
       ) : (
         <>
           <Light isGreen={isGreen} isBlink ={isBlink} />
-          <Player isMove={isGreen} isCaught={handleCaught} />
+          <Player isMove={isGreen} isCaught={handleCaught} setPlayerPosition={setPlayerPosition} />
         </>
       )}
     </div>
