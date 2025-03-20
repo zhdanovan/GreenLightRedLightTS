@@ -2,13 +2,22 @@ import React, { useState, useEffect } from 'react';
 import Light from './Light';
 import Player from './Player';
 
+
+interface Stats {
+  wins: number;
+  losses: number;
+  bestTime: number | null;
+}
+
 const GameController: React.FC = () => {
   const [isGreen, setIsGreen] = useState(true);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isBlink, setIsBlink] = useState(false);
   const [timeLeft,setTimeLeft] = useState(30);
   const [playerPosition, setPlayerPosition] = useState(0);
+  const [stats, setStats] = useState<Stats>({ wins: 0, losses: 0, bestTime: null });
   const finishLine = 800; 
+
 
 
 
@@ -46,6 +55,7 @@ const GameController: React.FC = () => {
 
   const handleCaught = () => {
     setIsGameOver(true);
+    setStats((prev) => ({ ...prev, losses: prev.losses + 1 }));
   };
 
   return (
