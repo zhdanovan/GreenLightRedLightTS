@@ -19,56 +19,78 @@ const GameController: React.FC = () => {
   const finishLine = 800; 
 
 
-
-
   useEffect(() => {
     const lightInterval = setInterval(() => {
-      setIsBlink(true); 
+      setIsBlink(true);
       setTimeout(() => {
         setIsGreen((prev) => !prev);
         setIsBlink(false);
-      }, 2000); 
-    }, 5000); 
-
-    useEffect(() => {
-      if (timeLeft > 0 && !isGameOver) {
-        const timer = setInterval(() => {
-          setTimeLeft((prev) => prev - 1);
-        }, 1000);
-        return () => clearInterval(timer);
-      } else if (timeLeft === 0) {
-        setIsGameOver(true); 
-      }
-    }, [timeLeft, isGameOver]);
-
-    useEffect(() => {
-      if (playerPosition >= finishLine) {
-        setIsGameOver(true);
-        alert('Win!'); 
-      }
-    }, [playerPosition]);
-
+      }, 2000);
+    }, 5000);
 
     return () => clearInterval(lightInterval);
   }, []);
 
+  useEffect(() => {
+    if (timeLeft > 0 && !isGameOver) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (timeLeft === 0) {
+      setIsGameOver(true);
+      setStats((prev) => ({ ...prev, losses: prev.losses + 1 }));
+    }
+  }, [timeLeft, isGameOver]);
+
+
+  useEffect(() => {
+    if (playerPosition >= finishLine) {
+      setIsGameOver(true);
+      const currentTime = 30 - timeLeft; 
+      setStats((prev) => ({
+        wins: prev.wins + 1,
+        losses: prev.losses,
+        bestTime: prev.bestTime === null ? currentTime : Math.min(prev.bestTime, currentTime),
+      }));
+      alert(`Вы выиграли! Время: ${currentTime} сек`);
+    }
+  }, [playerPosition, timeLeft]);
 
   const handleCaught = () => {
     setIsGameOver(true);
-    setStats((prev) => ({ ...prev, losses: prev.losses + 1 }));
+    setStats((prev) => ({ ...prev, losses: prev.losses + 1 })); // Увеличиваем количество проигрышей
+  };
+
+  const resetGame = () => {
+    setIsGameOver(false);
+    setTimeLeft(30);
+    setPlayerPosition(0);
+    setIsGreen(true);
+    setIsBlink(false);
   };
 
   return (
     <div>
       <h1>GreenLightRedLight</h1>
       {isGameOver ? (
-        <h2>Game over</h2>
+         <div>
+         <h2>{timeLeft === 0 ? 'Время вышло!' : 'Game over!'}</h2>
+         <button onClick={resetGame}>Начать заново</button>
+       </div>
       ) : (
         <>
           <Light isGreen={isGreen} isBlink ={isBlink} />
           <Player isMove={isGreen} isCaught={handleCaught} setPlayerPosition={setPlayerPosition} />
         </>
+
       )}
+      <div className="stats">
+        <h3>Статистика:</h3>
+        <p>Побед: {stats.wins}</p>
+        <p>Поражений: {stats.losses}</p>
+        <p>Лучшее время: {stats.bestTime !== null ? `${stats.bestTime} сек` : 'N/A'}</p>
+      </div>
     </div>
   );
 };
