@@ -4,9 +4,11 @@ interface PlayerProps {
     isMove:boolean;
     isCaught:()=>void;
     setPlayerPosition: (position: number) => void;
+    setIsPlayerMove: (isMove: boolean) => void;
+
 }
 
-const Player: React.FC<PlayerProps> = ({ isMove, isCaught, setPlayerPosition }) => {
+const Player: React.FC<PlayerProps> = ({ isMove, isCaught, setPlayerPosition, setIsPlayerMove }) => {
     const [position, setPosition] = useState(0);
   
     useEffect(() => {
@@ -24,8 +26,9 @@ const Player: React.FC<PlayerProps> = ({ isMove, isCaught, setPlayerPosition }) 
     }, [isMove]);
 
     useEffect(() => {
+      setIsPlayerMove(isMove);
       setPlayerPosition(position); 
-    }, [position, setPlayerPosition]);
+    }, [position, setPlayerPosition,setIsPlayerMove]);
   
 
     useEffect(() => {

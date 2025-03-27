@@ -16,6 +16,7 @@ const GameController: React.FC = () => {
   const [timeLeft,setTimeLeft] = useState(30);
   const [playerPosition, setPlayerPosition] = useState(0);
   const [stats, setStats] = useState<Stats>({ wins: 0, losses: 0, bestTime: null });
+  const [isPlayerMove, setIsPlayerMove] = useState(false);
   const finishLine = 800; 
 
 
@@ -25,11 +26,18 @@ const GameController: React.FC = () => {
       setTimeout(() => {
         setIsGreen((prev) => !prev);
         setIsBlink(false);
-      }, 2000);
-    }, 5000);
+
+        if (!isGreen && isPlayerMove) {
+          setTimeout(() => {
+            handleCaught();
+          },300);
+        }
+      },2000);
+    },10000);
 
     return () => clearInterval(lightInterval);
-  }, []);
+  }, [isGreen, isPlayerMove])
+
 
   useEffect(() => {
     if (timeLeft > 0 && !isGameOver) {
@@ -68,6 +76,7 @@ const GameController: React.FC = () => {
     setPlayerPosition(0);
     setIsGreen(true);
     setIsBlink(false);
+    setIsPlayerMove(false);
   };
 
   return (
@@ -85,6 +94,7 @@ const GameController: React.FC = () => {
             isMove={isGreen}
             isCaught={handleCaught}
             setPlayerPosition={setPlayerPosition}
+            setIsPlayerMove = {setIsPlayerMove}
           />
           <div className="finish-line" style={{ left: `${finishLine}px` }} />
           <div className="timer">Осталось времени: {timeLeft} сек</div>
