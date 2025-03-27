@@ -59,7 +59,7 @@ const GameController: React.FC = () => {
 
   const handleCaught = () => {
     setIsGameOver(true);
-    setStats((prev) => ({ ...prev, losses: prev.losses + 1 })); // Увеличиваем количество проигрышей
+    setStats((prev) => ({ ...prev, losses: prev.losses + 1 })); 
   };
 
   const resetGame = () => {
@@ -81,9 +81,15 @@ const GameController: React.FC = () => {
       ) : (
         <>
           <Light isGreen={isGreen} isBlink ={isBlink} />
-          <Player isMove={isGreen} isCaught={handleCaught} setPlayerPosition={setPlayerPosition} />
+          <Player
+            isMove={isGreen}
+            isCaught={handleCaught}
+            setPlayerPosition={setPlayerPosition}
+          />
+          <div className="finish-line" style={{ left: `${finishLine}px` }} />
+          <div className="timer">Осталось времени: {timeLeft} сек</div>
         </>
-
+        
       )}
       <div className="stats">
         <h3>Статистика:</h3>
