@@ -33,7 +33,7 @@ const GameController: React.FC = () => {
           },300);
         }
       },2000);
-    },10000);
+    },3000);
 
     return () => clearInterval(lightInterval);
   }, [isGreen, isPlayerMove])
