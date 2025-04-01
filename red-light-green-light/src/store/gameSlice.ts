@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface GameState {
   isGreen: boolean;
-  isBlinking: boolean;
+  isBlink: boolean;
   isGameOver: boolean;
   timeLeft: number;
   playerPosition: number;
@@ -15,7 +15,7 @@ interface GameState {
 
 const initialState: GameState = {
   isGreen: true,
-  isBlinking: false,
+  isBlink: false,
   isGameOver: false,
   timeLeft: 30,
   playerPosition: 0,
@@ -34,7 +34,7 @@ const gameSlice = createSlice({
       state.isGreen = action.payload;
     },
     setBlinking: (state, action: PayloadAction<boolean>) => {
-      state.isBlinking = action.payload;
+      state.isBlink = action.payload;
     },
     setGameOver: (state, action: PayloadAction<boolean>) => {
       state.isGameOver = action.payload;

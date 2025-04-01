@@ -1,54 +1,62 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface PlayerProps {
-    isMove:boolean;
-    isCaught:()=>void;
-    setPlayerPosition: (position: number) => void;
-    setIsPlayerMove: (isMove: boolean) => void;
-
+  canMove: boolean;
+  onCaught: () => void;
+  onPositionChange: (position: number, isMoving: boolean) => void;
 }
 
-const Player: React.FC<PlayerProps> = ({ isMove, isCaught, setPlayerPosition, setIsPlayerMove }) => {
-    const [position, setPosition] = useState(0);
-  
-    useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (isMove && event.key === 'ArrowRight') {
-          setPosition((prev) => prev + 10); 
-        }
-      };
+const Player: React.FC<PlayerProps> = ({ canMove, onCaught, onPositionChange }) => {
+  const [position, setPosition] = useState(0);
+  const [isKeyPressed, setIsKeyPressed] = useState(false);
 
-      window.addEventListener('keydown', handleKeyDown);
-  
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }, [isMove]);
 
-    useEffect(() => {
-      setIsPlayerMove(isMove);
-      setPlayerPosition(position); 
-    }, [position, setPlayerPosition,setIsPlayerMove]);
-  
-
-    useEffect(() => {
-      if (!isMove && position > 0) {
-        isCaught();
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        setIsKeyPressed(true);
       }
-    }, [isMove, position, isCaught]);
-  
-    return (
-      <div
-        style={{
-          width: '50px',
-          height: '50px',
-          backgroundColor: 'blue',
-          position: 'absolute',
-          bottom: '0',
-          left: `${position}px`,
-        }}
-      />
-    );
-  };
-  
-  export default Player;
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        setIsKeyPressed(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    if (isKeyPressed && canMove) {
+      const interval = setInterval(() => {
+        setPosition(prev => prev + 5);
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [isKeyPressed, canMove]);
+
+  useEffect(() => {
+    onPositionChange(position, isKeyPressed);
+    
+    if (!canMove && isKeyPressed) {
+      onCaught();
+    }
+  }, [position, isKeyPressed, canMove, onPositionChange, onCaught]);
+
+  return (
+    <div 
+      className="player"
+      style={{ left: `${position}px` }}
+    />
+  );
+};
+
+export default Player;
