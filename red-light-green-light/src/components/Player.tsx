@@ -1,55 +1,54 @@
 import React, { useState, useEffect } from 'react';
+import { GAME_CONFIG } from './constant';
 
 interface PlayerProps {
-  canMove: boolean;
-  onCaught: () => void;
-  onPositionChange: (position: number, isMoving: boolean) => void;
+  isMovementAllowed: boolean;
+  onPositionChange: (position: number) => void;
+  onViolation: () => void;
 }
 
-const Player: React.FC<PlayerProps> = ({ canMove, onCaught, onPositionChange }) => {
+const Player: React.FC<PlayerProps> = ({ 
+  isMovementAllowed, 
+  onPositionChange,
+  onViolation
+}) => {
   const [position, setPosition] = useState(0);
-  const [isKeyPressed, setIsKeyPressed] = useState(false);
-
+  const [isMoving, setIsMoving] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') {
-        setIsKeyPressed(true);
-      }
+      if (e.key === 'ArrowRight') setIsMoving(true);
     };
-
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') {
-        setIsKeyPressed(false);
-      }
+      if (e.key === 'ArrowRight') setIsMoving(false);
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 
-
   useEffect(() => {
-    if (isKeyPressed && canMove) {
+    if (isMoving && isMovementAllowed) {
       const interval = setInterval(() => {
-        setPosition(prev => prev + 5);
-      }, 100);
+        setPosition(prev => {
+          const newPosition = prev + GAME_CONFIG.PLAYER.SPEED;
+          onPositionChange(newPosition);
+          return newPosition;
+        });
+      }, GAME_CONFIG.PLAYER.MOVE_INTERVAL);
       return () => clearInterval(interval);
     }
-  }, [isKeyPressed, canMove]);
+  }, [isMoving, isMovementAllowed]);
 
   useEffect(() => {
-    onPositionChange(position, isKeyPressed);
-    
-    if (!canMove && isKeyPressed) {
-      onCaught();
+    if (isMoving && !isMovementAllowed) {
+      onViolation();
     }
-  }, [position, isKeyPressed, canMove, onPositionChange, onCaught]);
+  }, [isMoving, isMovementAllowed]);
 
   return (
     <div 

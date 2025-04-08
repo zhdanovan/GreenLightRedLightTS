@@ -1,33 +1,32 @@
-import {useState, useEffect} from 'react';
-import '../styles.css'
+import React, { useEffect } from 'react';
+import '../styles.css';
+
+type LightState = 'green' | 'red' | 'blinking';
 
 interface LightProps {
-    isGreen:boolean;
-    isBlink:boolean;
+  state: LightState;
 }
 
-const Light : React.FC<LightProps> = ({isGreen, isBlink}) => {
-
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  useEffect(() => {
-    if (isBlink) {
-      setIsAnimating(true);
-      const timer = setTimeout(() => setIsAnimating(false), 2000);
-      return () => clearTimeout(timer);
+const Light: React.FC<LightProps> = ({ state }) => {
+  const getLightContent = () => {
+    switch(state) {
+      case 'green': 
+        return { text: 'Можно двигаться', icon: '🚦', className: 'green' };
+      case 'red':
+        return { text: 'СТОП!', icon: '✋', className: 'red' };
+      case 'blinking':
+        return { text: 'Внимание!', icon: '⚠️', className: 'blinking' };
     }
-  }, [isBlink]);
-
-    return (
-      <div className={`light ${isGreen ? 'green' : 'red'} ${isAnimating ? 'blink' : ''}`}>
-      <span className="light-text">
-        {isGreen ? 'Можно двигаться' : 'СТОП!'}
-      </span>
-      <div className="light-icon">
-        {isGreen ? '🚦' : '✋'}
-      </div>
-    </div>
-    );
   };
 
-  export default Light;
+  const { text, icon, className } = getLightContent();
+
+  return (
+    <div className={`light ${className}`}>
+      <span className="light-text">{text}</span>
+      <div className="light-icon">{icon}</div>
+    </div>
+  );
+};
+
+export default Light;

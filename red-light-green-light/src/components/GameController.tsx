@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Light from './Light';
 import Player from './Player';
+import { GAME_CONFIG } from './constant';
 
 interface GameStats {
   wins: number;
@@ -8,119 +9,101 @@ interface GameStats {
   bestTime: number | null;
 }
 
-const GAME_DURATION = 30;
-const FINISH_LINE = 800;
-const LIGHT_INTERVAL = 5000;
-const BLINK_DURATION = 2000;
-
 const GameController: React.FC = () => {
-  const [gameState, setGameState] = useState({
-    isGreen: true,
-    isBlinking: false,
-    isGameOver: false,
-    timeLeft: GAME_DURATION,
-    playerPosition: 0,
-    isPlayerMoving: false
-  });
+  const [lightState, setLightState] = useState<'green' | 'red'>('green');
+  const [isWarning, setIsWarning] = useState(false);
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.DURATION);
+  const [playerPosition, setPlayerPosition] = useState(0);
+  const [stats, setStats] = useState<GameStats>({ wins: 0, losses: 0, bestTime: null });
 
-  const [stats, setStats] = useState<GameStats>({ 
-    wins: 0, 
-    losses: 0, 
-    bestTime: null 
-  });
-
-
-  const handleCaught = () => {
-    setGameState(prev => ({ ...prev, isGameOver: true }));
-    setStats(prev => ({ ...prev, losses: prev.losses + 1 }));
-  };
-
-  const handleWin = () => {
-    const currentTime = GAME_DURATION - gameState.timeLeft;
-    setStats(prev => ({
-      wins: prev.wins + 1,
-      losses: prev.losses,
-      bestTime: prev.bestTime ? Math.min(prev.bestTime, currentTime) : currentTime
-    }));
-    alert(`Вы выиграли! Время: ${currentTime} сек`);
+  //Обработчики игровых событий
+  const endGame = (result: 'won' | 'lost') => {
+    setGameStatus(result);
+    if (result === 'won') {
+      const currentTime = GAME_CONFIG.DURATION - timeLeft;
+      setStats(prev => ({
+        wins: prev.wins + 1,
+        losses: prev.losses,
+        bestTime: prev.bestTime ? Math.min(prev.bestTime, currentTime) : currentTime
+      }));
+    } else {
+      setStats(prev => ({ ...prev, losses: prev.losses + 1 }));
+    }
   };
 
   const resetGame = () => {
-    setGameState({
-      isGreen: true,
-      isBlinking: false,
-      isGameOver: false,
-      timeLeft: GAME_DURATION,
-      playerPosition: 0,
-      isPlayerMoving: false
-    });
+    setLightState('green');
+    setIsWarning(false);
+    setGameStatus('playing');
+    setTimeLeft(GAME_CONFIG.DURATION);
+    setPlayerPosition(0);
   };
 
-
+  //Логика светофора
   useEffect(() => {
-    const lightInterval = setInterval(() => {
-      setGameState(prev => ({ ...prev, isBlinking: true }));
+    const changeLight = () => {
+      setIsWarning(true);
       
       setTimeout(() => {
-        const newLightState = !gameState.isGreen;
-        setGameState(prev => ({ 
-          ...prev, 
-          isGreen: newLightState,
-          isBlinking: false 
-        }));
+        setLightState(prev => prev === 'green' ? 'red' : 'green');
+        setIsWarning(false);
+      }, GAME_CONFIG.LIGHT.BLINK_DURATION);
+    };
 
-        if (!newLightState && gameState.isPlayerMoving) {
-          setTimeout(handleCaught, 300);
+    const lightTimer = setInterval(changeLight, 
+      lightState === 'green' 
+        ? GAME_CONFIG.LIGHT.GREEN_DURATION 
+        : GAME_CONFIG.LIGHT.RED_DURATION
+    );
+
+    return () => clearInterval(lightTimer);
+  }, [lightState]);
+
+  //Таймер 
+  useEffect(() => {
+    if (gameStatus !== 'playing') return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          endGame('lost');
+          return 0;
         }
-      }, BLINK_DURATION);
-    }, LIGHT_INTERVAL);
+        return prev - 1;
+      });
+    }, 1000);
 
-    return () => clearInterval(lightInterval);
-  }, [gameState.isGreen, gameState.isPlayerMoving]);
+    return () => clearInterval(timer);
+  }, [gameStatus]);
 
-
+  //Проверка победы
   useEffect(() => {
-    if (gameState.timeLeft > 0 && !gameState.isGameOver) {
-      const timer = setInterval(() => {
-        setGameState(prev => ({ ...prev, timeLeft: prev.timeLeft - 1 }));
-      }, 1000);
-      return () => clearInterval(timer);
-    } else if (gameState.timeLeft === 0) {
-      handleCaught();
+    if (playerPosition >= GAME_CONFIG.FINISH_LINE && gameStatus === 'playing') {
+      endGame('won');
     }
-  }, [gameState.timeLeft, gameState.isGameOver]);
-
-
-  useEffect(() => {
-    if (gameState.playerPosition >= FINISH_LINE && !gameState.isGameOver) {
-      setGameState(prev => ({ ...prev, isGameOver: true }));
-      handleWin();
-    }
-  }, [gameState.playerPosition, gameState.isGameOver]);
+  }, [playerPosition, gameStatus]);
 
   return (
     <div className="game-container">
       <h1>GreenLightRedLight</h1>
       
-      {gameState.isGameOver ? (
+      {gameStatus !== 'playing' ? (
         <div className="game-over">
-          <h2>{gameState.timeLeft === 0 ? 'Время вышло!' : 'Game over!'}</h2>
+          <h2>{gameStatus === 'won' ? 'Победа!' : 'Игра окончена!'}</h2>
           <button onClick={resetGame}>Начать заново</button>
         </div>
       ) : (
         <>
-          <Light isGreen={gameState.isGreen} isBlink={gameState.isBlinking} />
+          <Light state={isWarning ? 'blinking' : lightState} />
           
           <Player
-            canMove={gameState.isGreen}
-            onCaught={handleCaught}
-            onPositionChange={(position, isMoving) => 
-              setGameState(prev => ({ ...prev, playerPosition: position, isPlayerMoving: isMoving }))
-            }
+            isMovementAllowed={lightState === 'green'}
+            onPositionChange={setPlayerPosition}
+            onViolation={() => lightState === 'red' && endGame('lost')}
           />
           
-          <div className="finish-line" style={{ left: `${FINISH_LINE}px` }} />
-          <div className="timer">Осталось времени: {gameState.timeLeft} сек</div>
+          <div className="timer">Осталось времени: {timeLeft} сек</div>
         </>
       )}
       
